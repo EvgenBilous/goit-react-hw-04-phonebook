@@ -95,24 +95,13 @@ const initialContacts = [
 
 const App = () => {
   const [filter, setFilter] = useState('');
-  const [contacts, setContacts] = useState(initialContacts);
+
+  const [contacts, setContacts] = useState(
+    () => JSON.parse(localStorage.getItem('contacts')) || initialContacts
+  );
 
   useEffect(() => {
-    const storage = localStorage.getItem('contacts');
-    if (!storage) {
-      setContacts(initialContacts);
-      return;
-    }
-    const parsedStorage = JSON.parse(storage);
-    setContacts(parsedStorage);
-  }, []);
-
-  useEffect(() => {
-    const previousContacts = JSON.stringify(contacts);
-    const storage = localStorage.getItem('contacts');
-    if (!storage || JSON.stringify(storage) !== previousContacts) {
-      localStorage.setItem('contacts', previousContacts);
-    }
+    localStorage.setItem('contacts', JSON.stringify(contacts));
   }, [contacts]);
 
   const handleFilterContacts = () => {
@@ -125,7 +114,7 @@ const App = () => {
     setFilter(evt.currentTarget.value);
   };
 
-  const addContact = (name, number) => {
+  const addContact = ({ name, number }) => {
     //const idShortid = shortid.generate();
     const isDuplicateContact = contacts.some(
       contact => contact.name.toLowerCase() === name.toLowerCase()
@@ -135,6 +124,7 @@ const App = () => {
       return;
     }
     const newContact = {
+      id: nanoid(),
       name,
       number,
     };
@@ -149,12 +139,12 @@ const App = () => {
   return (
     <div>
       <Section title={'PhoneBook'}>
-        <PhoneBook addContact={addContact} />
+        <PhoneBook onSubmit={addContact} />
       </Section>
       <Section title={'Contacts'}>
         <SearchFilter filter={filter} onChange={handleFilter} />
         <ContactsList
-          contacts={handleFilterContacts}
+          contacts={handleFilterContacts()}
           deleteContact={deleteContact}
         />
       </Section>
